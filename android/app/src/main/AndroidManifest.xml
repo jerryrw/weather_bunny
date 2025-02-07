@@ -46,4 +46,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <!-- -->
+    <!-- Added for the http request-->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- -->
 </manifest>

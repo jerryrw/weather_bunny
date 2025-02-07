@@ -7,6 +7,18 @@ import 'package:http/http.dart' as http;
 
 import 'dart:convert' as convert; //  for json conversion
 
+// https://open-meteo.com/
+
+// https://api.open-meteo.com/v1/forecast
+// ?latitude=52.52
+// &longitude=13.41
+// &current=temperature_2m,
+// relative_humidity_2m
+// &temperature_unit=fahrenheit
+// &wind_speed_unit=mph
+// &precipitation_unit=inch
+// &forecast_days=1
+
 void main() {
   runApp(const MyApp());
 }
