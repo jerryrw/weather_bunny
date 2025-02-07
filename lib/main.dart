@@ -1,4 +1,4 @@
-import 'dart:async';
+//import 'dart:async';
 //import 'dart:convert' as convert; //  for json conversion
 import 'package:flutter/material.dart';
 import 'getlocation.dart';
@@ -27,13 +27,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Weather Bunny',
       theme: ThemeData(
         // This is the theme of your application.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Weather Bunny Demo Page'),
     );
   }
 }
@@ -51,8 +51,10 @@ class _MyHomePageState extends State<MyHomePage> {
   String lat = '0';
   String long = '0';
   String locationMessage = 'None'; // lat and long are null at startup
-//  String weatherString = '0';
+
   Map<String, dynamic> jsonMap = {};
+  String temperature = '0';
+  String humidity = '0';
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +72,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Text(
               locationMessage, // lat and long as a string
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              'Temp: $temperature', // temp as a string
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            Text(
+              'Humidity: $humidity', // humidity as a string
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
@@ -83,17 +93,19 @@ class _MyHomePageState extends State<MyHomePage> {
             setState(() {
               locationMessage = 'Lat: $lat , Long: $long';
             });
-          });
-          // TODO for some reaon this will not update on the first call after running
-          // TODO propably need to do a blocking http request not async
-          callApi(latitude: lat, longitude: long)
-              .then((Map<String, dynamic> value) {
-            jsonMap = value;
-          });
-          Timer(Duration(seconds: 2), () {
-            // TODO this is a total kludge of a fix
-            print('From main: ${jsonMap['current']}');
-            //time, interval, temperature_2m, relative_humidity_2m
+            callApi(latitude: lat, longitude: long)
+                .then((Map<String, dynamic> value) {
+              jsonMap = value;
+              //current: time, interval, temperature_2m, relative_humidity_2m
+              //print(jsonMap['current']); // for debugging
+              setState(() {
+                temperature = jsonMap['current']['temperature_2m'].toString();
+                humidity =
+                    jsonMap['current']['relative_humidity_2m'].toString();
+              });
+              print('Temp: ${temperature} Humidity: ${humidity}');
+            });
+            print('Lat: ${lat}, Long: ${long}');
           });
         },
         tooltip: 'Increment',
