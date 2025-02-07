@@ -1,11 +1,8 @@
+import 'dart:async';
+//import 'dart:convert' as convert; //  for json conversion
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-//Geolocator video - https://www.youtube.com/watch?v=9v44lAagZCI&t=9s
-
-import 'package:http/http.dart' as http;
-//http package - https://pub.dev/packages/http/example
-
-import 'dart:convert' as convert; //  for json conversion
+import 'getlocation.dart';
+import 'callapi.dart';
 
 // https://open-meteo.com/
 
@@ -51,33 +48,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late String lat;
-  late String long;
+  String lat = '0';
+  String long = '0';
   String locationMessage = 'None'; // lat and long are null at startup
-
-  Future<Position> _getCurrentLocation() async {
-    // start by making sure location services are on
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location Service disabled');
-    }
-
-    // get permission from the user
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permission denied.');
-        //TODO - need to fail gracefully somehow
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permenantly denied');
-    }
-    // actually get the position
-    return await Geolocator.getCurrentPosition();
-  }
+//  String weatherString = '0';
+  Map<String, dynamic> jsonMap = {};
 
   @override
   Widget build(BuildContext context) {
@@ -102,12 +77,23 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _getCurrentLocation().then((value) {
+          getCurrentLocation().then((value) {
             lat = '${value.latitude}';
             long = '${value.longitude}';
             setState(() {
               locationMessage = 'Lat: $lat , Long: $long';
             });
+          });
+          // TODO for some reaon this will not update on the first call after running
+          // TODO propably need to do a blocking http request not async
+          callApi(latitude: lat, longitude: long)
+              .then((Map<String, dynamic> value) {
+            jsonMap = value;
+          });
+          Timer(Duration(seconds: 2), () {
+            // TODO this is a total kludge of a fix
+            print('From main: ${jsonMap['current']}');
+            //time, interval, temperature_2m, relative_humidity_2m
           });
         },
         tooltip: 'Increment',
