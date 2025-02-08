@@ -1,8 +1,8 @@
 //import 'dart:async';
 //import 'dart:convert' as convert; //  for json conversion
 import 'package:flutter/material.dart';
-import 'getlocation.dart';
-import 'callapi.dart';
+import 'getLocation.dart';
+import 'callWeatherAPI.dart';
 
 // https://open-meteo.com/
 
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       title: 'Weather Bunny',
       theme: ThemeData(
         // This is the theme of your application.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Weather Bunny Demo Page'),
@@ -50,7 +50,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String lat = '0';
   String long = '0';
-  String locationMessage = 'None'; // lat and long are null at startup
+  String locationMessage =
+      'Refresh for Weather'; // lat and long are null at startup
 
   Map<String, dynamic> jsonMap = {};
   String temperature = '0';
@@ -62,14 +63,12 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        centerTitle: true,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'Lat and Long:',
-            ),
             Text(
               locationMessage, // lat and long as a string
               style: Theme.of(context).textTheme.headlineSmall,
@@ -82,34 +81,50 @@ class _MyHomePageState extends State<MyHomePage> {
               'Humidity: $humidity', // humidity as a string
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+            ElevatedButton(
+              child: Text('Refresh'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                // side: BorderSide(color: Colors.yellow, width: 5),
+                textStyle: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontStyle: FontStyle.normal),
+                shape: BeveledRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
+                shadowColor: Colors.lightBlue,
+              ),
+              onPressed: () {
+                setState(() {
+                  locationMessage = 'Updating';
+                });
+                getCurrentLocation().then((value) {
+                  lat = '${value.latitude}';
+                  long = '${value.longitude}';
+                  //setState(() {
+
+                  //locationMessage = 'Lat: $lat , Long: $long'; // for debugging
+                  //});
+                  callApi(latitude: lat, longitude: long)
+                      .then((Map<String, dynamic> value) {
+                    jsonMap = value;
+                    //current: time, interval, temperature_2m, relative_humidity_2m
+                    //print(jsonMap['current']); // for debugging
+                    setState(() {
+                      temperature =
+                          jsonMap['current']['temperature_2m'].toString();
+                      humidity =
+                          jsonMap['current']['relative_humidity_2m'].toString();
+                      locationMessage = ' ';
+                    });
+                    print('Temp: ${temperature} Humidity: ${humidity}');
+                  });
+                  print('Lat: ${lat}, Long: ${long}');
+                });
+              },
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          getCurrentLocation().then((value) {
-            lat = '${value.latitude}';
-            long = '${value.longitude}';
-            setState(() {
-              locationMessage = 'Lat: $lat , Long: $long';
-            });
-            callApi(latitude: lat, longitude: long)
-                .then((Map<String, dynamic> value) {
-              jsonMap = value;
-              //current: time, interval, temperature_2m, relative_humidity_2m
-              //print(jsonMap['current']); // for debugging
-              setState(() {
-                temperature = jsonMap['current']['temperature_2m'].toString();
-                humidity =
-                    jsonMap['current']['relative_humidity_2m'].toString();
-              });
-              print('Temp: ${temperature} Humidity: ${humidity}');
-            });
-            print('Lat: ${lat}, Long: ${long}');
-          });
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
